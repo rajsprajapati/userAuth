@@ -27,10 +27,8 @@ class UserServices {
 
     // async createUser(query) {
     async createUser( Name, UserName, password, useremail, role, group, permission) {
-        // const newUser = new User(query);
         const newUser = new User({ Name, UserName, password, useremail, role, group, permission });
         await newUser.save();
-        // const token = generateToken(user_id);
         const data = {
             id: newUser._id.toString(),
             date: new Date()

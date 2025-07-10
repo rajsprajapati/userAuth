@@ -17,8 +17,8 @@ export const  authenticateToken = (req, res, next ) => {
             return res.status(403).json({message: "Unauthorize "})
         }
         // console.log("user token data: ",decoded);
-        req.user = await User.findById(decoded.id)
-        console.log("user data: ", req.user);
+        req.user = await User.findById(decoded.id, {permission: 1, isSuperAdmin:1}).populate('permission');
+        // console.log("user data: ", req.user);
         next();
     })
 };

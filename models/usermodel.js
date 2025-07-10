@@ -23,27 +23,33 @@ const User = new mongoose.Schema({
         require: true,
         unique: true
     },
-    group: {
+    group: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Group",
         require: true,
+
         default: "User"
-    },
+    }],
     role: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Role",
         require: true,
         default: "User"
     },
-    permission: {
-        // type: [mongoose.Schema.Types.Mixed],
-        type: [String],
+    permission: [{
+        type: mongoose.Schema.Types.ObjectId,
+        // type: [String],
         ref: "Permission",
-        require: true
-    },
+        require: true,
+        default: "view_profile"
+    }],
     isVerified: {
     type: Boolean,
     default: false  // default as boolean false
+    },
+    isSuperAdmin: { 
+        type: Boolean, 
+        default: false 
     }
 },{
     timestamps: true
