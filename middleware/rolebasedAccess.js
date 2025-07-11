@@ -1,5 +1,5 @@
-// middleware/userRole.js
-import User from '../models/usermodel.js';
+import { updateUserPermissions } from "../utils/updatepermission.js";
+
 export const checkPermissions = (requiredPermission) => {
     return async (req, res, next) => {
         // Ensure the user is authenticated
@@ -13,15 +13,16 @@ export const checkPermissions = (requiredPermission) => {
                 return next();
             }
 
-           
-
-            const permissionSet = new Set(req.user.permission.map(p => p.name));
-
+            const userPermissions = await updateUserPermissions(req.user._id.toString());
+            const permissionSet = new Set(userPermissions);
             
+            console.log('requiredPermission:', requiredPermission);
+
             if (!permissionSet.has(requiredPermission)) {
                 return res.status(403).json({ message: 'Forbidden: Access denied'});
             }
     
+            // console.log('access granted for user:', req.user.UserName);
             next();
         } catch (error) {
             console.error('Error in checkPermissions middleware:', error);

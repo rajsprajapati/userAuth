@@ -3,7 +3,14 @@ import UserServices from "../services/UserServices.js"
 export const getuser = async(req, res) => {
     try{
         console.log(" Server is runing :")
+        // const page = parseInt(req.query.page) || 1;
+        // const limit = parseInt(req.query.limit) || 10;
+        // const skip = (page - 1) * limit;
+        // const { Name, UserName, useremail, role, group, permission } = req.body;
+
+        // const user = await UserServices.getUser( Name, UserName, useremail, role, group, permission , page, limit, skip );
         const user = await UserServices.getUser();
+
         res.status(user.status).json({ message: user.message, data: user.allUser});
     }catch(error) {
         res.status(500).json({ message: "Error while get all User", error: error.message});

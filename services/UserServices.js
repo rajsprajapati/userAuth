@@ -7,26 +7,70 @@ import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
+import redis from '../utils/redisClient.js'; // adjust path as needed
+
 class UserServices {
 
+    // async getUser(id, page, limit, skip, Name, UserName, useremail, role, group, permission) {
     async getUser() {
         try {
-            const allUser = await User.find();
-            return {
-                status: 200,
-                message: "Get All User successfully",
-                allUser
+            // query = {};
+            // if (id) query._id = id; // Filter by user ID
+            // if (Name) query.Name = { $regex: Name, $options: 'i' };
+            // if (UserName) query.UserName = { $regex: UserName, $options: 'i' };
+            // if (useremail) query.useremail = { $regex: useremail, $options: 'i' };
+            // if (role) query.role = role;
+            // if (group) query.group = group;
+            // if (permission) query.permission = permission;
+
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const skip = (page - 1) * limit;
+
+            const cacheKey = 'all_users';
+            const cachedData = await redis.get(cacheKey);
+
+            // console.log('cachedData : ', cachedData);
+            if (cachedData) {
+                return {
+                    status: 200,
+                    message: "Get All Users from Redis cache",
+                    allUser: JSON.parse(cachedData)
+                };
             }
+            const allUser = await User.find(query)
+            .skip(skip)
+            .limit(limit)
+            .populate({
+                path: 'group',
+                populate: { path: 'permission' }
+            })
+            .populate("permission role");  // show the value to the user group and permission and role
+
+            await redis.set(cacheKey, JSON.stringify(allUser), 'EX', 600);
+
+            const totalUsers = await User.countDocuments(query);
+            const totalPages = Math.ceil(totalUsers / limit);
+
+            return {
+                page,
+                limit,
+                totalUsers,
+                totalPages,
+                status: 200,
+                message: "Get All Users from DB",
+                allUser
+            };
         } catch (error) {
             return {
-                status: 200,
+                status: 500,
                 message: " Error while Get All User",
             }
         }
     }
 
     // async createUser(query) {
-    async createUser( Name, UserName, password, useremail, role, group, permission) {
+    async createUser(Name, UserName, password, useremail, role, group, permission) {
         const newUser = new User({ Name, UserName, password, useremail, role, group, permission });
         await newUser.save();
         const data = {
@@ -34,8 +78,8 @@ class UserServices {
             date: new Date()
         }
         const token = await jwt.sign(data, process.env.JWT_SECRET_KEY, { expiresIn: '1h', });
-        
-        if(!token) {
+
+        if (!token) {
             return {
                 status: 500,
                 message: "Error generating token"
@@ -65,7 +109,7 @@ class UserServices {
             }
 
             const isMatch = await bcrypt.compare(password, user.password);
-            console.log("Password match:", isMatch);
+            // console.log("Password match:", isMatch);
             if (!isMatch) {
                 return {
                     status: 404,
@@ -77,7 +121,7 @@ class UserServices {
 
             const token = generateToken(user_id);
 
-            console.log("Generated token:", token);
+            // console.log("Generated token:", token);
 
             return {
                 status: 200,

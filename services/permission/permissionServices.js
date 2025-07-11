@@ -1,10 +1,23 @@
 import Permission from "../../models/permissionModel.js";
+import redis from "../../utils/redisClient.js";
 
 class PermissionServices {
 
     async getPermissions() {
         try {
+            const cacheKey = 'all_users';
+            const cachedData = await redis.get(cacheKey);
+            if (cachedData) {
+                return {
+                    status: 200,
+                    message: "Get All Permissions from Redis cache",
+                    allPermissions: JSON.parse(cachedData)
+                };
+            }
             const allPermissions = await Permission.find();
+            
+            await redis.set(cacheKey, JSON.stringify(allPermissions), 'EX', 600); // Store in Redis with TTL (e.g., 10 minutes = 600 seconds)
+            
             return {
                 status: 200,
                 message: "Get All Permissions successfully",

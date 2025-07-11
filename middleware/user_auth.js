@@ -13,7 +13,7 @@ export const  authenticateToken = (req, res, next ) => {
     }
     jwt.verify(token, process.env.JWT_SECRET_KEY, async (err, decoded) => {
         if (err){
-            console.log("Error in authRoute middelware:", err);
+            // console.log("Error in authRoute middelware:", err);
             return res.status(403).json({message: "Unauthorize "})
         }
         // console.log("user token data: ",decoded);
