@@ -11,61 +11,60 @@ import redis from '../utils/redisClient.js'; // adjust path as needed
 
 class UserServices {
 
-    // async getUser(id, page, limit, skip, Name, UserName, useremail, role, group, permission) {
-    async getUser() {
+    async getUser(page, limit, skip, Name, useremail, group, role, permission) {
         try {
-            // query = {};
-            // if (id) query._id = id; // Filter by user ID
-            // if (Name) query.Name = { $regex: Name, $options: 'i' };
-            // if (UserName) query.UserName = { $regex: UserName, $options: 'i' };
-            // if (useremail) query.useremail = { $regex: useremail, $options: 'i' };
-            // if (role) query.role = role;
-            // if (group) query.group = group;
-            // if (permission) query.permission = permission;
+            const query = {};
 
-            const page = parseInt(req.query.page) || 1;
-            const limit = parseInt(req.query.limit) || 10;
-            const skip = (page - 1) * limit;
+            if (Name) query.Name = { $regex: Name, $options: 'i' };
+            if (useremail) query.useremail = { $regex: useremail, $options: 'i' };
+            if (group) query.group = group;
+            if (role) query.role = role;
+            if (permission) query.permission = permission;
 
-            const cacheKey = 'all_users';
+            
+            const cacheKey = `users:page=${page}:limit=${limit}:Name=${Name}:useremail=${useremail}:group=${group}:role=${role}:permission=${permission}`;
+
+            // ✅ Try to fetch from Redis cache
             const cachedData = await redis.get(cacheKey);
-
-            // console.log('cachedData : ', cachedData);
             if (cachedData) {
                 return {
                     status: 200,
-                    message: "Get All Users from Redis cache",
-                    allUser: JSON.parse(cachedData)
+                    message: 'Users fetched from Redis cache',
+                    ...JSON.parse(cachedData),
                 };
             }
-            const allUser = await User.find(query)
-            .skip(skip)
-            .limit(limit)
-            .populate({
-                path: 'group',
-                populate: { path: 'permission' }
-            })
-            .populate("permission role");  // show the value to the user group and permission and role
+            
+           const allUser = await User.find(query)
+                .skip(skip)
+                .limit(limit)
+                .populate('group')
+                .populate('role')
+                .populate('permission');
 
-            await redis.set(cacheKey, JSON.stringify(allUser), 'EX', 600);
+            const total = await User.countDocuments(query);
 
-            const totalUsers = await User.countDocuments(query);
-            const totalPages = Math.ceil(totalUsers / limit);
+            const response = {
+                totalusers: total,
+                page: Number(page),
+                totalPages: Math.ceil(total / limit),
+                allUser,
+            };
+
+            // ✅ Cache the result for 5 minutes
+            await redis.set(cacheKey, JSON.stringify(response), 'EX', 300);
 
             return {
-                page,
-                limit,
-                totalUsers,
-                totalPages,
                 status: 200,
-                message: "Get All Users from DB",
-                allUser
+                message: 'Users fetched from database',
+                ...response,
             };
         } catch (error) {
+            console.error('Error in getUser:', error);
             return {
                 status: 500,
-                message: " Error while Get All User",
-            }
+                message: 'Error while fetching users',
+                error: error.message,
+            };
         }
     }
 

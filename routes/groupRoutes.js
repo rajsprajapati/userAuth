@@ -10,17 +10,17 @@ import { getGroups, createGroup, updateGroup, deleteGroup } from '../controllers
 
 // Define the routes
 routes.get('/', 
-    authenticateToken, checkPermissions("super_admin"), 
+    authenticateToken, checkPermissions("view_G"), 
     getGroups); // Get all groups
 // routes.get('/', checkPermissions(['edit_profile']), getGroups); // Get all groups
 routes.post('/', 
-    authenticateToken, checkPermissions("super_admin"), 
+    authenticateToken, checkPermissions("create_G"), 
     createGroup); // Create a new group
 routes.put('/:id', 
-    authenticateToken, checkPermissions("super_admin"), 
+    authenticateToken, checkPermissions("edit_G"), 
     updateGroup); // Update a group by ID
 routes.delete('/:id', 
-    authenticateToken, checkPermissions("super_admin"), 
+    authenticateToken, checkPermissions("delete_G"), 
     deleteGroup); // Delete a group by ID
 // Export the routes
 export default routes;

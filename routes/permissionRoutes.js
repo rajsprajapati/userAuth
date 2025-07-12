@@ -7,10 +7,10 @@ import { getPermissions, createPermission, updatePermission, deletePermission } 
 
 const routes = express.Router();
 
-routes.get("/", authenticateToken, checkPermissions("super_admin"),  getPermissions);
-routes.post("/", authenticateToken, checkPermissions("super_admin"), createPermission);
+routes.get("/", authenticateToken, checkPermissions("view_P"),  getPermissions);
+routes.post("/", authenticateToken, checkPermissions("create_P"), createPermission);
 // routes.post("/", authenticateToken, createPermission);
-routes.put("/:id", authenticateToken, checkPermissions("super_admin"), updatePermission);
-routes.delete("/:id", authenticateToken, checkPermissions("super_admin"), deletePermission);
+routes.put("/:id", authenticateToken, checkPermissions("edit_P"), updatePermission);
+routes.delete("/:id", authenticateToken, checkPermissions("delete_P"), deletePermission);
 
 export default routes;
